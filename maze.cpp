@@ -205,12 +205,21 @@ int dfs(vector<vector<char>> const &arr, int r, int c, vector<vector<bool>> &vis
     return cost+1;
 }
 
-int bfs(vector<vector<char>> const &arr, Coordinate start, vector<vector<bool>> &visited, vector<vector<int>> &path) {
+int bfs(vector<vector<char>> const &arr, Coordinate start, vector<vector<int>> &path) {
     int n=arr.size();
+    int cost=0;
+    vector<vector<bool>> visited(n);
+    vector<vector<int>> total_cost(n);
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            visited[i].push_back(false);
+            total_cost[i].push_back(INT32_MAX);
+        }
+    }
     queue<pair<int, int>> next;
     next.push({start.r, start.c});
-    int cost=0;
-    
+    total_cost[start.r][start.c]=0;
+
     while(next.empty()==false) {
         int r=next.front().first, c=next.front().second;
         next.pop();
@@ -221,86 +230,60 @@ int bfs(vector<vector<char>> const &arr, Coordinate start, vector<vector<bool>> 
             display_path(arr, visited);
             usleep(50000);
 
+        visited[r][c]=true;
+        if(arr[r][c]==END) 
+            return cost;
+
         // north
-        if(r-1>=0 && visited[r-1][c]==false && arr[r-1][c]!=OBSTACLE) { 
+        if(r-1>=0 && arr[r-1][c]!=OBSTACLE && total_cost[r-1][c]>total_cost[r][c]+10) {
             next.push({r-1, c});
-            visited[r-1][c]=true;
             path[r-1][c]=2;
-            cost++;
-            if(arr[r-1][c]==END) 
-                return cost;
+            total_cost[r-1][c]=total_cost[r][c]+10;
         }
-        
-        // north-east
-        if(r-1>=0 && c+1<n && visited[r-1][c+1]==false && arr[r-1][c+1]!=OBSTACLE) {
-            next.push({r-1, c+1});
-            visited[r-1][c+1]=true;
-            path[r-1][c+1]=1;
-            cost++;
-            if(arr[r-1][c+1]==END)
-                return cost;
-        }
-
         // east
-        if(c+1<n && visited[r][c+1]==false && arr[r][c+1]!=OBSTACLE) { 
+        if(c+1<n && arr[r][c+1]!=OBSTACLE && total_cost[r][c+1]>total_cost[r][c]+10) {
             next.push({r, c+1});
-            visited[r][c+1]=true;
             path[r][c+1]=4;
-            cost++;
-            if(arr[r][c+1]==END) 
-                return cost;
+            total_cost[r][c+1]=total_cost[r][c]+10;
         }
-        
-        // south-east
-        if(r+1<n && c+1<n && visited[r+1][c+1]==false && arr[r+1][c+1]!=OBSTACLE) {
-            next.push({r+1, c+1});
-            visited[r+1][c+1]=true;
-            path[r+1][c+1]=7;
-            cost++;
-            if(arr[r+1][c+1]==END)
-                return cost;
-        }
-        
         // south
-        if(r+1<n && visited[r+1][c]==false && arr[r+1][c]!=OBSTACLE) { 
+        if(r+1<n && arr[r+1][c]!=OBSTACLE && total_cost[r+1][c]>total_cost[r][c]+10) {
             next.push({r+1,c});
-            visited[r+1][c]=true;
             path[r+1][c]=8;
-            cost++;
-            if(arr[r+1][c]==END) 
-                return cost;
-        }
-
-        // south-west
-        if(r+1<n && c-1>=0 && visited[r+1][c-1]==false && arr[r+1][c-1]!=OBSTACLE) {
-            next.push({r+1, c-1});
-            visited[r+1][c-1]=true;
-            path[r+1][c-1]=9;
-            cost++;
-            if(arr[r+1][c-1]==END)
-                return cost;
+            total_cost[r+1][c]=total_cost[r][c]+10;
         }
         
         // west
-        if(c-1>=0 && visited[r][c-1]==false && arr[r][c-1]!=OBSTACLE) { 
+        if(c-1>=0 && arr[r][c-1]!=OBSTACLE && total_cost[r][c-1]>total_cost[r][c]+10) {
             next.push({r, c-1});
-            visited[r][c-1]=true;
             path[r][c-1]=6;
-            cost++;
-            if(arr[r][c-1]==END) 
-                return cost;
+            total_cost[r][c-1]=total_cost[r][c]+10;
         }
-        
+        // north-east
+        if(r-1>=0 && c+1<n && arr[r-1][c+1]!=OBSTACLE && total_cost[r-1][c+1]>total_cost[r][c]+14) {
+            next.push({r-1, c+1});
+            total_cost[r-1][c+1]=total_cost[r][c]+14;
+            path[r-1][c+1]=1;
+        }        
+        // south-east
+        if(r+1<n && c+1<n && arr[r+1][c+1]!=OBSTACLE && total_cost[r+1][c+1]>total_cost[r][c]+14) {
+            next.push({r+1, c+1});
+            total_cost[r+1][c+1]=total_cost[r][c]+14;
+            path[r+1][c+1]=7;
+        }
+        // south-west
+        if(r+1<n && c-1>=0 && arr[r+1][c-1]!=OBSTACLE && total_cost[r+1][c-1]>total_cost[r][c]+14) {
+            next.push({r+1, c-1});
+            total_cost[r+1][c-1]=total_cost[r][c]+14;
+            path[r+1][c-1]=9;
+        }
         // north-west
-        if(r-1>=0 && c-1>=0 && visited[r-1][c-1]==false && arr[r-1][c-1]!=OBSTACLE) {
+        if(r-1>=0 && c-1>=0 && arr[r-1][c-1]!=OBSTACLE && total_cost[r-1][c-1]>total_cost[r][c]+14) {
             next.push({r-1, c-1});
-            visited[r-1][c-1]=true;
+            total_cost[r-1][c-1]=total_cost[r][c]+14;
             path[r-1][c-1]=3;
-            cost++;
-            if(arr[r-1][c-1]==END)
-                return cost;
         }
-    
+        cost++;
     }
     return -1;
 }
@@ -323,74 +306,72 @@ int A_star(vector<vector<char>> const &arr, Coordinate start, Coordinate end, ve
     }
     int cost=0;
     vector<vector<bool>>  visited(n);
-    vector<vector<bool>>  enqueued(n);
+    vector<vector<int>>  total_cost(n);
     for(int i=0; i<n; i++) {
         for(int j=0; j<n; j++) {
             visited[i].push_back(false);
-            enqueued[i].push_back(false);
+            total_cost[i].push_back(INT32_MAX);
         }
     }
 
     priority_queue<pair<int, pair<int, int>>> next;
     next.push({value[start.r][start.c], {start.r, start.c}});
-    visited[start.r][start.c]=true;
-    enqueued[start.r][start.c]=true;
-    
+    total_cost[start.r][start.c]=0;
 
     while(next.empty()==false) {
         int r=next.top().second.first, c=next.top().second.second;
         int v=next.top().first;
         next.pop();
 
-        visited[r][c]=true;
-        if(arr[r][c]==END) 
-            return cost;
-
+        
         // Display progress 
             system("clear");
             cout<<"Searching for a path ... "<<endl;
             display_path(arr, visited);
             usleep(50000);
         
+        visited[r][c]=true;
+        if(arr[r][c]==END) 
+            return cost;
 
-        if(r+1<n && enqueued[r+1][c]==false && arr[r+1][c]!=OBSTACLE) { 
+        if(r+1<n && arr[r+1][c]!=OBSTACLE && total_cost[r+1][c]>total_cost[r][c]+10) {
             next.push({ value[r+1][c], {r+1, c} });
-            enqueued[r+1][c]=true;
+            total_cost[r+1][c]=total_cost[r][c]+10;
             path[r+1][c]=8;
         }
-        if(c+1<n && enqueued[r][c+1]==false && arr[r][c+1]!=OBSTACLE) { 
+        if(c+1<n && arr[r][c+1]!=OBSTACLE && total_cost[r][c+1]>total_cost[r][c]+10) {
             next.push({ value[r][c+1], {r, c+1} });
-            enqueued[r][c+1]=true;
+            total_cost[r][c+1]=total_cost[r][c]+10;
             path[r][c+1]=4;
         }
-        if(r-1>=0 && enqueued[r-1][c]==false && arr[r-1][c]!=OBSTACLE) { 
+        if(r-1>=0 && arr[r-1][c]!=OBSTACLE && total_cost[r-1][c]>total_cost[r][c]+10) {
             next.push({ value[r-1][c], {r-1, c} });
-            enqueued[r-1][c]=true;
+            total_cost[r-1][c]=total_cost[r][c]+10;
             path[r-1][c]=2;
         }
-        if(c-1>=0 && enqueued[r][c-1]==false && arr[r][c-1]!=OBSTACLE) { 
+        if(c-1>=0 && arr[r][c-1]!=OBSTACLE && total_cost[r][c-1]>total_cost[r][c]+10) {
             next.push({ value[r][c-1], {r, c-1} });
-            enqueued[r][c-1]=true;
+            total_cost[r][c-1]=total_cost[r][c]+10;
             path[r][c-1]=6;
         }
-        if(r-1>=0 && c-1>=0 && enqueued[r-1][c-1]==false && arr[r-1][c-1]!=OBSTACLE) {
+        if(r-1>=0 && c-1>=0 && arr[r-1][c-1]!=OBSTACLE && total_cost[r-1][c-1]>total_cost[r][c]+14) {
             next.push({ value[r-1][c-1], {r-1, c-1} });
-            enqueued[r-1][c-1]=true;
+            total_cost[r-1][c-1]=total_cost[r][c]+14;
             path[r-1][c-1]=3;
         }
-        if(r-1>=0 && c+1<n && enqueued[r-1][c+1]==false && arr[r-1][c+1]!=OBSTACLE) {
+        if(r-1>=0 && c+1<n && arr[r-1][c+1]!=OBSTACLE && total_cost[r-1][c+1]>total_cost[r][c]+14) {
             next.push({ value[r-1][c+1], {r-1, c+1} });
-            enqueued[r-1][c+1]=true;
+            total_cost[r-1][c+1]=total_cost[r][c]+14;
             path[r-1][c+1]=1;
         }
-        if(r+1<n && c+1<n && enqueued[r+1][c+1]==false && arr[r+1][c+1]!=OBSTACLE) {
+        if(r+1<n && c+1<n && arr[r+1][c+1]!=OBSTACLE && total_cost[r+1][c+1]>total_cost[r][c]+14) {
             next.push({ value[r+1][c+1], {r+1, c+1} });
-            enqueued[r+1][c+1]=true;
+            total_cost[r+1][c+1]=total_cost[r][c]+14;
             path[r+1][c+1]=7;
         }
-        if(r+1<n && c-1>=0 && enqueued[r+1][c-1]==false && arr[r+1][c-1]!=OBSTACLE) {
+        if(r+1<n && c-1>=0 && arr[r+1][c-1]!=OBSTACLE && total_cost[r+1][c-1]>total_cost[r][c]+14) {
             next.push({ value[r+1][c-1], {r+1, c-1} });
-            enqueued[r+1][c-1]=true;
+            total_cost[r+1][c-1]=total_cost[r][c]+14;
             path[r+1][c-1]=9;
         }
         cost++;
@@ -612,7 +593,7 @@ int main()
                             case 2:
                                 clear(visited);
                                 clear(path);
-                                search_cost=bfs(game, src, visited, path);
+                                search_cost=bfs(game, src, path);
                                 path_cost=trace_path(game, dst.r, dst.c, visited, path);
                                 break;
                             case 3:
