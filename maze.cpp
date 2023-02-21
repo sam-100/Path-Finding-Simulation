@@ -98,8 +98,9 @@ void clear(vector<vector<int>> &arr, int val) {
     }
 }
 
-int trace_path(vector<vector<char>> const &arr, int r, int c, vector<vector<bool>> &visited, vector<vector<int>> &path) {
+int trace_path(vector<vector<char>> const &arr, Coordinate end, vector<vector<bool>> &visited, vector<vector<int>> &path) {
     int n=arr.size();
+    int r=end.r, c=end.c;
     clear(visited);
     int cost=0;
     while(arr[r][c]!=START) {
@@ -148,7 +149,7 @@ int trace_path(vector<vector<char>> const &arr, int r, int c, vector<vector<bool
     return cost;
 }
 
-int dfs(vector<vector<char>> const &arr, int r, int c, vector<vector<bool>> &visited, vector<vector<int>> &total_cost, bool &found, vector<vector<int>> &path) {
+int depthFirstSearch(vector<vector<char>> const &arr, int r, int c, vector<vector<bool>> &visited, vector<vector<int>> &total_cost, bool &found, vector<vector<int>> &path) {
     if(arr[r][c]==END) {
         found=true;
         return 0;
@@ -211,41 +212,118 @@ int dfs(vector<vector<char>> const &arr, int r, int c, vector<vector<bool>> &vis
     // Recursively exploring all the paths 
         // north 
             if(r-1>=0 && found==false && visited[r-1][c]==false) {
-                cost+=dfs(arr, r-1, c, visited, total_cost, found, path);
+                cost+=depthFirstSearch(arr, r-1, c, visited, total_cost, found, path);
             }
         // north-east
             if(r-1>=0 && c+1<n && found==false && visited[r-1][c+1]==false) {
-                cost+=dfs(arr, r-1, c+1, visited, total_cost, found, path);
+                cost+=depthFirstSearch(arr, r-1, c+1, visited, total_cost, found, path);
             }
         // east
             if(c+1<n && found==false && visited[r][c+1]==false) {
-                cost+=dfs(arr, r, c+1, visited, total_cost, found, path);
+                cost+=depthFirstSearch(arr, r, c+1, visited, total_cost, found, path);
             }
         // south-east
             if(r+1<n && c+1<n && found==false && visited[r+1][c+1]==false) {
-                cost+=dfs(arr, r+1, c+1, visited, total_cost, found, path);
+                cost+=depthFirstSearch(arr, r+1, c+1, visited, total_cost, found, path);
             }
         // south 
             if(r+1<n && found==false && visited[r+1][c]==false) {
-                cost+=dfs(arr, r+1, c, visited, total_cost, found, path);
+                cost+=depthFirstSearch(arr, r+1, c, visited, total_cost, found, path);
             }
         // south-west
             if(r+1<n && c-1>=0 && found==false && visited[r+1][c-1]==false) {
-                cost+=dfs(arr, r+1, c-1, visited, total_cost, found, path);
+                cost+=depthFirstSearch(arr, r+1, c-1, visited, total_cost, found, path);
             }
         // west 
             if(c-1>=0 && found==false && visited[r][c-1]==false) {
-                cost+=dfs(arr, r, c-1, visited, total_cost, found, path);
+                cost+=depthFirstSearch(arr, r, c-1, visited, total_cost, found, path);
             }
         // north-west
             if(r-1>=0 && c-1>=0 && found==false && visited[r-1][c-1]==false) {
-                cost+=dfs(arr, r-1, c-1, visited, total_cost, found, path);
+                cost+=depthFirstSearch(arr, r-1, c-1, visited, total_cost, found, path);
             }
 
     return cost+1;
 }
 
-int bfs(vector<vector<char>> const &arr, Coordinate start, vector<vector<int>> &path) {
+void update_neighbours(vector<vector<char>> const &arr, int const r, int const c, vector<vector<int>> &path, queue<pair<int, int>> &next, vector<vector<int>> &total_cost, bool reverse_path) {
+    int n=arr.size();
+    // north
+    if(r-1>=0 && arr[r-1][c]!=OBSTACLE && total_cost[r-1][c]>total_cost[r][c]+10) {
+        next.push({r-1, c});
+        total_cost[r-1][c]=total_cost[r][c]+10;
+        if(reverse_path==false) 
+            path[r-1][c]=2;
+        else 
+            path[r-1][c]=8;
+    }
+    // east
+    if(c+1<n && arr[r][c+1]!=OBSTACLE && total_cost[r][c+1]>total_cost[r][c]+10) {
+        next.push({r, c+1});
+        total_cost[r][c+1]=total_cost[r][c]+10;
+        if(reverse_path==false) 
+            path[r][c+1]=4;
+        else 
+            path[r][c+1]=6;
+    }
+    // south
+    if(r+1<n && arr[r+1][c]!=OBSTACLE && total_cost[r+1][c]>total_cost[r][c]+10) {
+        next.push({r+1,c});
+        total_cost[r+1][c]=total_cost[r][c]+10;
+        if(reverse_path==false) 
+            path[r+1][c]=8;
+        else 
+            path[r+1][c]=2;
+    }
+    
+    // west
+    if(c-1>=0 && arr[r][c-1]!=OBSTACLE && total_cost[r][c-1]>total_cost[r][c]+10) {
+        next.push({r, c-1});
+        total_cost[r][c-1]=total_cost[r][c]+10;
+        if(reverse_path==false) 
+            path[r][c-1]=6;
+        else 
+            path[r][c-1]=4;
+    }
+    // north-east
+    if(r-1>=0 && c+1<n && arr[r-1][c+1]!=OBSTACLE && total_cost[r-1][c+1]>total_cost[r][c]+14) {
+        next.push({r-1, c+1});
+        total_cost[r-1][c+1]=total_cost[r][c]+14;
+        if(reverse_path==false)
+            path[r-1][c+1]=1;
+        else 
+            path[r-1][c+1]=9;
+    }        
+    // south-east
+    if(r+1<n && c+1<n && arr[r+1][c+1]!=OBSTACLE && total_cost[r+1][c+1]>total_cost[r][c]+14) {
+        next.push({r+1, c+1});
+        total_cost[r+1][c+1]=total_cost[r][c]+14;
+        if(reverse_path==false)
+            path[r+1][c+1]=7;
+        else 
+            path[r+1][c+1]=3;
+    }
+    // south-west
+    if(r+1<n && c-1>=0 && arr[r+1][c-1]!=OBSTACLE && total_cost[r+1][c-1]>total_cost[r][c]+14) {
+        next.push({r+1, c-1});
+        total_cost[r+1][c-1]=total_cost[r][c]+14;
+        if(reverse_path==false)
+            path[r+1][c-1]=9;
+        else 
+            path[r+1][c-1]=1;
+    }
+    // north-west
+    if(r-1>=0 && c-1>=0 && arr[r-1][c-1]!=OBSTACLE && total_cost[r-1][c-1]>total_cost[r][c]+14) {
+        next.push({r-1, c-1});
+        total_cost[r-1][c-1]=total_cost[r][c]+14;
+        if(reverse_path==false)
+            path[r-1][c-1]=3;
+        else 
+            path[r-1][c-1]=7;
+    }
+}
+
+int breadthFirstSearch(vector<vector<char>> const &arr, Coordinate start, vector<vector<int>> &path) {
     int n=arr.size();
     int cost=0;
     vector<vector<bool>> visited(n);
@@ -271,64 +349,19 @@ int bfs(vector<vector<char>> const &arr, Coordinate start, vector<vector<int>> &
             usleep(50000);
 
         visited[r][c]=true;
-        if(arr[r][c]==END) 
+        if(arr[r][c]==END) {
+            int x;
+            display(path);
+            cin>>x;
             return cost;
-
-        // north
-        if(r-1>=0 && arr[r-1][c]!=OBSTACLE && total_cost[r-1][c]>total_cost[r][c]+10) {
-            next.push({r-1, c});
-            path[r-1][c]=2;
-            total_cost[r-1][c]=total_cost[r][c]+10;
         }
-        // east
-        if(c+1<n && arr[r][c+1]!=OBSTACLE && total_cost[r][c+1]>total_cost[r][c]+10) {
-            next.push({r, c+1});
-            path[r][c+1]=4;
-            total_cost[r][c+1]=total_cost[r][c]+10;
-        }
-        // south
-        if(r+1<n && arr[r+1][c]!=OBSTACLE && total_cost[r+1][c]>total_cost[r][c]+10) {
-            next.push({r+1,c});
-            path[r+1][c]=8;
-            total_cost[r+1][c]=total_cost[r][c]+10;
-        }
-        
-        // west
-        if(c-1>=0 && arr[r][c-1]!=OBSTACLE && total_cost[r][c-1]>total_cost[r][c]+10) {
-            next.push({r, c-1});
-            path[r][c-1]=6;
-            total_cost[r][c-1]=total_cost[r][c]+10;
-        }
-        // north-east
-        if(r-1>=0 && c+1<n && arr[r-1][c+1]!=OBSTACLE && total_cost[r-1][c+1]>total_cost[r][c]+14) {
-            next.push({r-1, c+1});
-            total_cost[r-1][c+1]=total_cost[r][c]+14;
-            path[r-1][c+1]=1;
-        }        
-        // south-east
-        if(r+1<n && c+1<n && arr[r+1][c+1]!=OBSTACLE && total_cost[r+1][c+1]>total_cost[r][c]+14) {
-            next.push({r+1, c+1});
-            total_cost[r+1][c+1]=total_cost[r][c]+14;
-            path[r+1][c+1]=7;
-        }
-        // south-west
-        if(r+1<n && c-1>=0 && arr[r+1][c-1]!=OBSTACLE && total_cost[r+1][c-1]>total_cost[r][c]+14) {
-            next.push({r+1, c-1});
-            total_cost[r+1][c-1]=total_cost[r][c]+14;
-            path[r+1][c-1]=9;
-        }
-        // north-west
-        if(r-1>=0 && c-1>=0 && arr[r-1][c-1]!=OBSTACLE && total_cost[r-1][c-1]>total_cost[r][c]+14) {
-            next.push({r-1, c-1});
-            total_cost[r-1][c-1]=total_cost[r][c]+14;
-            path[r-1][c-1]=3;
-        }
+        update_neighbours(arr, r, c, path, next, total_cost, false);
         cost++;
     }
     return -1;
 }
 
-int A_star(vector<vector<char>> const &arr, Coordinate start, Coordinate end, vector<vector<int>> &path) {
+int A_starSearch(vector<vector<char>> const &arr, Coordinate start, Coordinate end, vector<vector<int>> &path) {
     int n=arr.size();
     vector<vector<int>> value(n);
     for(int i=0; i<n; i++) {
@@ -630,20 +663,20 @@ int main()
                                 clear(path, 5);
                                 clear(total_cost, INT32_MAX);
                                 found=false;
-                                search_cost=dfs(game, src.r, src.c, visited, total_cost, found, path);
-                                path_cost=trace_path(game, dst.r, dst.c, visited, path);
+                                search_cost=depthFirstSearch(game, src.r, src.c, visited, total_cost, found, path);
+                                path_cost=trace_path(game, dst, visited, path);
                                 break;
                             case 2:
                                 clear(visited);
                                 clear(path, 5);
-                                search_cost=bfs(game, src, path);
-                                path_cost=trace_path(game, dst.r, dst.c, visited, path);
+                                search_cost=breadthFirstSearch(game, src, path);
+                                path_cost=trace_path(game, dst, visited, path);
                                 break;
                             case 3:
                                 clear(visited);
                                 clear(path, 5);
-                                search_cost=A_star(game, src, dst, path);
-                                path_cost=trace_path(game, dst.r, dst.c, visited, path);
+                                search_cost=A_starSearch(game, src, dst, path);
+                                path_cost=trace_path(game, dst, visited, path);
                                 break;
                             case 4:
                                 clear(visited);
@@ -667,18 +700,5 @@ int main()
     }
     return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
