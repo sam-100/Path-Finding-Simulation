@@ -1,5 +1,6 @@
 #include <iostream>
-#include <bits/stdc++.h>
+#include <vector>
+#include <queue>
 #include <stdio.h>
 #include <unistd.h>
 using namespace std;
@@ -11,9 +12,9 @@ using namespace std;
 #define SELECTED '+'
 #define EXPLORED '@'
 #define SIZE 20
-#define SELECT 0
-#define BLOCK 1
-#define FREE 2 
+#define MODE_SELECT 0
+#define MODE_BLOCK 1
+#define MODE_FREE 2 
 
 
 class Coordinate {
@@ -149,7 +150,8 @@ int trace_path(vector<vector<char>> const &arr, Coordinate end, vector<vector<bo
     return cost;
 }
 
-int depthFirstSearch(vector<vector<char>> const &arr, int r, int c, vector<vector<bool>> &visited, vector<vector<int>> &total_cost, bool &found, vector<vector<int>> &path) {
+int depthFirstSearch(vector<vector<char>> const &arr, Coordinate curr, vector<vector<bool>> &visited, vector<vector<int>> &total_cost, bool &found, vector<vector<int>> &path) {
+    int r=curr.r, c=curr.c;
     if(arr[r][c]==END) {
         found=true;
         return 0;
@@ -212,37 +214,36 @@ int depthFirstSearch(vector<vector<char>> const &arr, int r, int c, vector<vecto
     // Recursively exploring all the paths 
         // north 
             if(r-1>=0 && found==false && visited[r-1][c]==false) {
-                cost+=depthFirstSearch(arr, r-1, c, visited, total_cost, found, path);
+                cost+=depthFirstSearch(arr, Coordinate(r-1, c), visited, total_cost, found, path);
             }
         // north-east
             if(r-1>=0 && c+1<n && found==false && visited[r-1][c+1]==false) {
-                cost+=depthFirstSearch(arr, r-1, c+1, visited, total_cost, found, path);
+                cost+=depthFirstSearch(arr, Coordinate(r-1, c+1), visited, total_cost, found, path);
             }
         // east
             if(c+1<n && found==false && visited[r][c+1]==false) {
-                cost+=depthFirstSearch(arr, r, c+1, visited, total_cost, found, path);
+                cost+=depthFirstSearch(arr, Coordinate(r, c+1), visited, total_cost, found, path);
             }
         // south-east
             if(r+1<n && c+1<n && found==false && visited[r+1][c+1]==false) {
-                cost+=depthFirstSearch(arr, r+1, c+1, visited, total_cost, found, path);
+                cost+=depthFirstSearch(arr, Coordinate(r+1, c+1), visited, total_cost, found, path);
             }
         // south 
             if(r+1<n && found==false && visited[r+1][c]==false) {
-                cost+=depthFirstSearch(arr, r+1, c, visited, total_cost, found, path);
+                cost+=depthFirstSearch(arr, Coordinate(r+1, c), visited, total_cost, found, path);
             }
         // south-west
             if(r+1<n && c-1>=0 && found==false && visited[r+1][c-1]==false) {
-                cost+=depthFirstSearch(arr, r+1, c-1, visited, total_cost, found, path);
+                cost+=depthFirstSearch(arr, Coordinate(r+1, c-1), visited, total_cost, found, path);
             }
         // west 
             if(c-1>=0 && found==false && visited[r][c-1]==false) {
-                cost+=depthFirstSearch(arr, r, c-1, visited, total_cost, found, path);
+                cost+=depthFirstSearch(arr, Coordinate(r, c-1), visited, total_cost, found, path);
             }
         // north-west
             if(r-1>=0 && c-1>=0 && found==false && visited[r-1][c-1]==false) {
-                cost+=depthFirstSearch(arr, r-1, c-1, visited, total_cost, found, path);
+                cost+=depthFirstSearch(arr, Coordinate(r-1, c-1), visited, total_cost, found, path);
             }
-
     return cost+1;
 }
 
@@ -350,9 +351,6 @@ int breadthFirstSearch(vector<vector<char>> const &arr, Coordinate start, vector
 
         visited[r][c]=true;
         if(arr[r][c]==END) {
-            int x;
-            display(path);
-            cin>>x;
             return cost;
         }
         update_neighbours(arr, r, c, path, next, total_cost, false);
@@ -469,7 +467,7 @@ int main()
         Coordinate src(0,0), dst(n-1,n-1);
         game[src.r][src.c]=START;
         game[dst.r][dst.c]=END;
-        int mode=SELECT;
+        int mode=MODE_SELECT;
         string  mode_name[3]={ "SELECT", "BLOCK", "FREE"};
         bool found=false;
         vector<vector<bool>> visited(n);
@@ -526,11 +524,11 @@ int main()
                         case 'w':
                         case 'W':
                             if(curser.r!=0) {
-                                if(mode==SELECT || curser==src || curser==dst) 
+                                if(mode==MODE_SELECT || curser==src || curser==dst) 
                                     game[curser.r][curser.c]=curr;
-                                else if(mode==BLOCK) 
+                                else if(mode==MODE_BLOCK) 
                                     game[curser.r][curser.c]=OBSTACLE;
-                                else if(mode==FREE)
+                                else if(mode==MODE_FREE)
                                     game[curser.r][curser.c]=BLANK;
                                 curser.r--;
                                 curr=game[curser.r][curser.c];
@@ -540,11 +538,11 @@ int main()
                         case 's':
                         case 'S':
                             if(curser.r!=n-1) {
-                                if(mode==SELECT || curser==src || curser==dst) 
+                                if(mode==MODE_SELECT || curser==src || curser==dst) 
                                     game[curser.r][curser.c]=curr;
-                                else if(mode==BLOCK) 
+                                else if(mode==MODE_BLOCK) 
                                     game[curser.r][curser.c]=OBSTACLE;
-                                else if(mode==FREE)
+                                else if(mode==MODE_FREE)
                                     game[curser.r][curser.c]=BLANK;
                                 curser.r++;
                                 curr=game[curser.r][curser.c];
@@ -554,11 +552,11 @@ int main()
                         case 'a':
                         case 'A':
                             if(curser.c!=0) {
-                                if(mode==SELECT || curser==src || curser==dst) 
+                                if(mode==MODE_SELECT || curser==src || curser==dst) 
                                     game[curser.r][curser.c]=curr;
-                                else if(mode==BLOCK) 
+                                else if(mode==MODE_BLOCK) 
                                     game[curser.r][curser.c]=OBSTACLE;
-                                else if(mode==FREE)
+                                else if(mode==MODE_FREE)
                                     game[curser.r][curser.c]=BLANK;
                                 curser.c--;
                                 curr=game[curser.r][curser.c];
@@ -568,11 +566,11 @@ int main()
                         case 'd':
                         case 'D':
                             if(curser.c!=n-1) {
-                                if(mode==SELECT || curser==src || curser==dst) 
+                                if(mode==MODE_SELECT || curser==src || curser==dst) 
                                     game[curser.r][curser.c]=curr;
-                                else if(mode==BLOCK) 
+                                else if(mode==MODE_BLOCK) 
                                     game[curser.r][curser.c]=OBSTACLE;
-                                else if(mode==FREE)
+                                else if(mode==MODE_FREE)
                                     game[curser.r][curser.c]=BLANK;
                                 curser.c++;
                                 curr=game[curser.r][curser.c];
@@ -581,17 +579,17 @@ int main()
                             break;
                         case 'o':
                         case 'O':
-                            if(mode==BLOCK)
-                                mode=SELECT;
+                            if(mode==MODE_BLOCK)
+                                mode=MODE_SELECT;
                             else
-                                mode=BLOCK;
+                                mode=MODE_BLOCK;
                             break;
                         case 'p':
                         case 'P':
-                            if(mode==FREE)
-                                mode=SELECT;
+                            if(mode==MODE_FREE)
+                                mode=MODE_SELECT;
                             else
-                                mode=FREE;
+                                mode=MODE_FREE;
                             break;
                         case 'k':
                         case 'K':
@@ -663,7 +661,7 @@ int main()
                                 clear(path, 5);
                                 clear(total_cost, INT32_MAX);
                                 found=false;
-                                search_cost=depthFirstSearch(game, src.r, src.c, visited, total_cost, found, path);
+                                search_cost=depthFirstSearch(game, src, visited, total_cost, found, path);
                                 path_cost=trace_path(game, dst, visited, path);
                                 break;
                             case 2:
@@ -700,5 +698,3 @@ int main()
     }
     return 0;
 }
-
-
